@@ -101,28 +101,28 @@ export const gte = minVersion => {
 	return versionToNumber(currentVersion) >= minVersion
 }
 
-export const requestPayment = async args => {
-	return new Promise(async (resolve, reject) => {
-		switch (env) {
-			case WEAPP:
-				Taro.requestPayment(args)
-					.then(res => resolve(res))
-					.catch(e => reject(e))
-				break
-			case ALIPAY:
-				promisely(my.tradePay, args)
-					.then(res => {
-						const resultCode = res.resultCode
-						if (~~resultCode === 9000) {
-							resolve(res)
-						} else {
-							reject(res)
-						}
-					})
-					.catch(e => reject(e))
-		}
-	})
-}
+// export const requestPayment = async args => {
+// 	return new Promise(async (resolve, reject) => {
+// 		switch (env) {
+// 			case WEAPP:
+// 				Taro.requestPayment(args)
+// 					.then(res => resolve(res))
+// 					.catch(e => reject(e))
+// 				break
+// 			case ALIPAY:
+// 				promisely(my.tradePay, args)
+// 					.then(res => {
+// 						const resultCode = res.resultCode
+// 						if (~~resultCode === 9000) {
+// 							resolve(res)
+// 						} else {
+// 							reject(res)
+// 						}
+// 					})
+// 					.catch(e => reject(e))
+// 		}
+// 	})
+// }
 
 export const isIPhoneX = () => {
 	const { model } = Taro.getSystemInfoSync()

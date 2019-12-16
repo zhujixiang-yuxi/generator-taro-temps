@@ -2,7 +2,7 @@ import { ComponentClass } from 'react'
 import Taro, { Component, Config } from '@tarojs/taro'
 import { View, Image } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
-import { queryUnFinishOrder, getUserInfo, getHelperQuestion } from '@/api'
+import { getUserInfo } from '@/api'
 import { setToken } from '../../store/actions/user'
 
 import './index.less'
@@ -69,9 +69,7 @@ class Index extends Component {
 	}
 
 	async componentDidMount() {
-		await queryUnFinishOrder()
-		getHelperQuestion()
-		getUserInfo()
+		await getUserInfo()
 	}
 
 	componentWillUnmount() {}

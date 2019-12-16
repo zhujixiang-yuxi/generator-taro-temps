@@ -1,1 +1,1 @@
-export { queryUnFinishOrder, getHelperQuestion, getUserInfo } from './order'
+export { getUserInfo } from './user'

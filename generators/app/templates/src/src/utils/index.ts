@@ -1,5 +1,5 @@
-export { promisely, getAuthCode, setClipboard, downloadFile, gte, requestPayment, isIPhoneX } from './adapter'
+export { promisely, getAuthCode, setClipboard, downloadFile, gte, isIPhoneX } from './adapter'
 
 export { isType, doNothing } from './common'
 
-export { http } from './request'
+export { default as http } from './request'

@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
 import { getAuthCode, isType } from '@/utils'
-import { NET_CODE } from '@/code'
 import { HttpResponse } from '@/interfaces'
+import { CUSTOM_HTTP_STATUS } from '@/constants'
 import store from '../store'
 import { setToken } from '../store/actions/user'
 
@@ -9,23 +9,42 @@ import Queue from './queue'
 
 const requestQueue = new Queue()
 const env = process.env.NODE_ENV
+
 export default class Http {
-	public middlewares
-	constructor() {
+	//自定义错误处理队列
+	protected middlewares
+	//获取token的接口地址（不含domain）
+	protected loginUrl: string
+	//获取token的接口的入参名, 具体的获取交由request去做
+	//这里只要给一个入参名字，目前支持微信和支付宝
+	protected loginParamsName
+
+	constructor({ loginUrl, loginParamsName }) {
+		this.loginUrl = loginUrl
+		this.loginParamsName = loginParamsName
 		this.middlewares = []
 	}
 
-	defaultRequestErrorHandler(err) {
+	//将请求错误进行一次封装
+	encapsulationResponseErr(err) {
+		console.log(err)
 		return err
+	}
+
+	use(code, fn) {
+		this.middlewares.push([code, fn])
+	}
+
+	getBaseUrl() {
+		return API_GATEWAY[env]
 	}
 
 	getToken() {
 		return new Promise(async (resolve, reject) => {
 			const authCode = await getAuthCode('auth_base')
-			this.post('/v1/user/login', { authCode })
+			this.post(this.loginUrl, { [this.loginParamsName]: authCode })
 				.then(res => {
-					console.log(res)
-					const token = res.data.token
+					const token = res.result.token
 					store.dispatch(setToken(token))
 					resolve(res)
 				})
@@ -33,15 +52,6 @@ export default class Http {
 					reject(err)
 				})
 		})
-	}
-
-	use(code, fn) {
-		const scene = { sceneCode: code, handleSceneFun: fn }
-		this.middlewares.push(scene)
-	}
-
-	getBaseUrl() {
-		return API_GATEWAY[env]
 	}
 
 	async handleNotAuthRequest(config, resolve, reject, selfRequestErrorHandler) {
@@ -60,42 +70,45 @@ export default class Http {
 			const { user } = store.getState()
 			config.header = {
 				'Content-Type': 'application/json', // 默认值
-				'MiniProgram-Type': 'ALIPAY',
-				'MiniProgram-Token': user.token,
+				Authorization: `Bearer ${user.token}`,
 			}
-			if (!user.token && !config.url.includes('user/login'))
+			if (!user.token && !config.url.includes(this.loginUrl)) {
 				return this.handleNotAuthRequest(config, resolve, reject, selfRequestErrorHandler)
-			const { data: response } = await Taro.request(config).catch(err => this.defaultRequestErrorHandler(err))
-			const { code, message } = response
-			if (code === NET_CODE.SUCCESS) return resolve(response)
+			}
+			console.log(config)
+			const { data: response } = await Taro.request(config).catch(err => this.encapsulationResponseErr(err))
+			const { code, errorMsg } = response
+			if (code === CUSTOM_HTTP_STATUS.SUCCESS) return resolve(response)
 			if (isType(selfRequestErrorHandler, 'function')) {
 				selfRequestErrorHandler(response)
 				return reject(response)
 			}
-			const hasCatchErrorScene = this.middlewares.some(element => {
-				if (element.sceneCode === code) {
-					element.handleSceneFun(response)
+			const notCatchError = this.middlewares.some(element => {
+				const [errCode, handleErrFn] = element
+				if (errCode === code) {
+					handleErrFn(response)
 					return true
 				}
 			})
-			!hasCatchErrorScene &&
+			if (notCatchError) {
 				Taro.showToast({
-					title: message || '服务暂不可用，请稍后重试',
+					title: errorMsg || '服务暂不可用，请稍后重试',
 					icon: 'none',
 				})
+			}
 			reject(response)
 		})
 	}
 
-	post(path, data = {}, handleError?: any): Promise<HttpResponse> {
+	post(path, data = {}, selfRequestErrorHandler?: any): Promise<HttpResponse> {
 		const url = this.getBaseUrl() + path
 		const method = 'POST'
-		return this.request({ method, url, data }, handleError)
+		return this.request({ method, url, data }, selfRequestErrorHandler)
 	}
 
-	get(path: string, handleError?: any): Promise<HttpResponse> {
+	get(path: string, selfRequestErrorHandler?: any): Promise<HttpResponse> {
 		const url = this.getBaseUrl() + path
 		const method = 'GET'
-		return this.request({ method, url }, handleError)
+		return this.request({ method, url }, selfRequestErrorHandler)
 	}
 }

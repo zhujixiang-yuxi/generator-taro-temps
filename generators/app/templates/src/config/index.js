@@ -47,7 +47,7 @@ const config = {
 		'@/components': path.resolve(__dirname, '..', 'src/components'),
 		'@/utils': path.resolve(__dirname, '..', 'src/utils'),
 		'@/api': path.resolve(__dirname, '..', 'src/api'),
-		'@/code': path.resolve(__dirname, '..', 'src/code'),
+		'@/constants': path.resolve(__dirname, '..', 'src/constants'),
 		'@/decorators': path.resolve(__dirname, '..', 'src/decorators'),
 		'@/interfaces': path.resolve(__dirname, '..', 'src/interfaces'),
 		'@/package': path.resolve(__dirname, '..', 'package.json'),
