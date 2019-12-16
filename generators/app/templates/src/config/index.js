@@ -35,8 +35,8 @@ const config = {
 	},
 	defineConstants: {
 		API_GATEWAY: {
-			development: 'https://dbb-miniprogram-gateway.iwosai.com',
-			production: 'https://dbb-miniprogram-gateway.shouqianba.com',
+			development: '',
+			production: '',
 		},
 	},
 	copy: {
