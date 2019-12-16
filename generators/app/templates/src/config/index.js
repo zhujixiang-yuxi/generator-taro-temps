@@ -9,7 +9,7 @@ if (typeArgs === '--type' && weappType) {
 }
 
 const config = {
-	projectName: 'plan-miniapp',
+	projectName: 'taro-miniapp',
 	date: '2019-11-29',
 	designWidth: 750,
 	deviceRatio: {
