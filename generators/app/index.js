@@ -1,10 +1,11 @@
-const Generator = require('yeoman-generator');
-const mkdirp = require('mkdirp');
-const chalk = require("chalk"); // 让console.log带颜色输出
-const yosay = require("yosay");
-const fs = require('fs')
-const decamelize = require('decamelize');
-const camelCase = require('camelcase');
+const Generator = require('yeoman-generator')
+const mkdirp = require('mkdirp')
+const chalk = require('chalk') // 让console.log带颜色输出
+const yosay = require('yosay')
+const decamelize = require('decamelize')
+const camelCase = require('camelcase')
+const shell = require('shelljs');
+
 // const copyFiles = async(src, dest) => {
 //   // package.json 和 模板文件不拷贝，后续单独处理
 //   const files = await glob(`${src}/**/!(package.json)`, { nodir: true });
@@ -20,25 +21,19 @@ const camelCase = require('camelcase');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
-    super(args, opts);
-    this.log(
-      yosay(
-        `感谢使用 ${chalk.red(
-          "generator-taro-temp"
-        )} generator!`
-      )
-    );
+    super(args, opts)
+    this.log(yosay(`感谢使用 ${chalk.red('generator-taro-temp')} generator!`))
     this.argument('appname', {
       type: String,
-      required: false,
-    });
+      required: false
+    })
   }
   async prompting() {
     const answers = await this.prompt([
       {
-        type: "input",
-        name: "name",
-        message: "请输入你的taro项目名",
+        type: 'input',
+        name: 'name',
+        message: '请输入你的taro项目名',
         default: this.options.appname || 'taro-app' // Default to current folder name
       },
       {
@@ -46,53 +41,82 @@ module.exports = class extends Generator {
         name: 'projectAuthor',
         message: '项目开发者',
         default: this.user.git.name(),
-        store: true          // 记住用户的选择
+        store: true // 记住用户的选择
       },
       {
         type: 'input',
         name: 'projectDesc',
-        message: '请描述你的项目',
+        message: '请描述你的项目'
       },
-    ]);
+      {
+        type: 'input',
+        name: 'appid',
+        message: '请输入项目的appid',
+        store: true
+      }
+    ])
     answers.name = decamelize(camelCase(answers.name), '-')
-    this.answers = answers;
+    this.answers = answers
   }
 
   async writing() {
-    const { name, projectAuthor,projectDesc } = this.answers;
+    const { name, projectAuthor, projectDesc, appid } = this.answers
     //创建项目文件
-    mkdirp(name);
+    mkdirp(name)
 
     // 更改项目根目录为之前创建的文件夹
-    this.destinationRoot(this.destinationPath(name));
+    this.destinationRoot(this.destinationPath(name))
 
     // copy package.json and update some values
-    this.fs.copyTpl(this.templatePath('_package.json'), this.destinationPath('package.json'), {
-      name: name || this.options.appname,
-      author: projectAuthor,
-      description: projectDesc
-    });
+    this.fs.copyTpl(
+      this.templatePath('_package.json'),
+      this.destinationPath('package.json'),
+      {
+        name: name || this.options.appname,
+        author: projectAuthor,
+        description: projectDesc
+      }
+    )
+
+    this.fs.copyTpl(
+      this.templatePath('_project.config.json'),
+      this.destinationPath('project.config.json'),
+      {
+        name: name || this.options.appname,
+        description: projectDesc,
+        appid: appid
+      }
+    )
+
+    this.fs.copyTpl(
+      this.templatePath('_.gitignore'),
+      this.destinationPath('.gitignore')
+    )
 
     // copy all files starting with .{whaetever} (like .eslintrc)
-    this.fs.copy(this.templatePath('src/.*'), this.destinationPath('./'));
+    this.fs.copy(this.templatePath('src/.*'), this.destinationPath('./'))
 
     // copy all folders and their contents
-    this.fs.copy(this.templatePath('src'), this.destinationPath('./'));
-    
+    this.fs.copy(this.templatePath('src'), this.destinationPath('./'))
     // templates目录里，除模板文件外都无脑拷贝
     // await copyFiles(path.join(__dirname, 'templates'), this.destinationRoot());
   }
 
   // install() {
-  //   // install all dependencies
-  //   this.npmInstall()
+  //   this.npmInstall(['husky'], {'save-dev': true})
   // }
 
   end() {
     this.log('')
+    this.log(`   cd ${this.answers.name} && git init`)
+    shell.cd(this.destinationRoot())
+    shell.exec('git init')
+    this.log('')
     this.log('   🎉🎉 项目创建成功')
     this.log('')
-    this.log(chalk.hex('#d33200')('   开发前请确认你已经安装了Taro的脚手架工具:'))
+    this.log(
+      chalk.hex('#d33200')('   开发前请确认你已经安装了Taro的脚手架工具:')
+    )
     this.log(chalk.hex('#99ee77')('   sudo npm install -g @tarojs/cli'))
     console.log('')
     this.log('   开始你的项目吧 😊')
@@ -101,4 +125,4 @@ module.exports = class extends Generator {
     this.log(chalk.hex('#875efd')('   npm run dev:weapp'))
     this.log('')
   }
-};
+}
