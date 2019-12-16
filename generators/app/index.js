@@ -50,6 +50,12 @@ module.exports = class extends Generator {
       },
       {
         type: 'input',
+        name: 'version',
+        message: '请输入项目版本号',
+        default: '0.1.0'
+      },
+      {
+        type: 'input',
         name: 'appid',
         message: '请输入项目的appid',
         store: true
@@ -60,7 +66,7 @@ module.exports = class extends Generator {
   }
 
   async writing() {
-    const { name, projectAuthor, projectDesc, appid } = this.answers
+    const { name, projectAuthor, projectDesc, appid, version } = this.answers
     //创建项目文件
     mkdirp(name)
 
