@@ -3,13 +3,13 @@ const path = require('path')
 
 let outputRoot = 'dist'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const [nodePath, buildPath, typeArgs, weappType] = process.argv
-if (typeArgs === '--type' && weappType) {
-	outputRoot = weappType
+const [nodePath, buildPath, typeArgs, appType] = process.argv
+if (typeArgs === '--type' && appType) {
+	outputRoot = appType
 }
 
 const config = {
-	projectName: 'taro-app',
+	projectName: process.env.npm_package_name,
 	designWidth: 750,
 	deviceRatio: {
 		'640': 2.34 / 2,

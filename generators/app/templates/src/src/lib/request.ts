@@ -2,11 +2,12 @@ import Taro from '@tarojs/taro'
 import { getAuthCode, isType } from '@/utils'
 import { HttpResponse } from '@/interfaces'
 import { CUSTOM_HTTP_STATUS } from '@/constants'
+import interceptors from './interceptors'
 import store from '../store'
 import { setToken } from '../store/actions/user'
-
 import Queue from './queue'
 
+interceptors.forEach(interceptorItem => Taro.addInterceptor(interceptorItem))
 const requestQueue = new Queue()
 const env = process.env.NODE_ENV
 
@@ -75,7 +76,6 @@ export default class Http {
 			if (!user.token && !config.url.includes(this.loginUrl)) {
 				return this.handleNotAuthRequest(config, resolve, reject, selfRequestErrorHandler)
 			}
-			console.log(config)
 			const { data: response } = await Taro.request(config).catch(err => this.encapsulationResponseErr(err))
 			const { code, errorMsg } = response
 			if (code === CUSTOM_HTTP_STATUS.SUCCESS) return resolve(response)
@@ -83,14 +83,14 @@ export default class Http {
 				selfRequestErrorHandler(response)
 				return reject(response)
 			}
-			const notCatchError = this.middlewares.some(element => {
+			const matchError = this.middlewares.some(element => {
 				const [errCode, handleErrFn] = element
 				if (errCode === code) {
 					handleErrFn(response)
 					return true
 				}
 			})
-			if (notCatchError) {
+			if (!matchError) {
 				Taro.showToast({
 					title: errorMsg || '服务暂不可用，请稍后重试',
 					icon: 'none',
