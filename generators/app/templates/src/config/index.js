@@ -34,7 +34,7 @@ const config = {
 	},
 	defineConstants: {
 		API_GATEWAY: {
-			development: '',
+			development: 'https://www.test.com',
 			production: '',
 		},
 	},
